@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace siemens_pedigree_api.Models
@@ -7,6 +8,7 @@ namespace siemens_pedigree_api.Models
 	{
 		public EmployeeContext(DbContextOptions<EmployeeContext> options): base(options)
 		{
+
 		}
 
 		public DbSet<Employee> employees { get; set; } = null!;
