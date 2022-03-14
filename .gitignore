@@ -1,4 +1,5 @@
 # globs
+.vscode
 Makefile.in
 *.userprefs
 *.usertasks

@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using siemens_pedigree_api.Models;
+using System.Text;
+using Microsoft.Data.SqlClient;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 

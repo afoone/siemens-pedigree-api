@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using siemens_pedigree_api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace siemens_pedigree_api.Controllers
 {
@@ -15,6 +16,7 @@ namespace siemens_pedigree_api.Controllers
     {
 
         private readonly EmployeeContext _context;
+        private readonly SqlConnectionStringBuilder _conn;
 
         private bool EmployeeExists(long id)
         {
@@ -24,6 +26,37 @@ namespace siemens_pedigree_api.Controllers
         public EmployeeController(EmployeeContext context)
         {
             _context = context;
+
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
+            builder.DataSource = "iprocuratio.com";
+            builder.UserID = "sa";
+            builder.Password = "iProcuratio2010!";
+            builder.InitialCatalog = "master";
+            _conn = builder;
+
+        }
+
+        private IEnumerable<Employee> GetEmployees()
+        {
+            List<Employee> _employees = new List<Employee>();
+            using (SqlConnection connection = new SqlConnection(_conn.ConnectionString))
+            {
+                String sql = "SELECT  id, name, complete FROM master.dbo.employees ";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    connection.Open();
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Console.WriteLine("{0} --- {1} --- {2}", reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2));
+                            _employees.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2) == 1));
+                        }
+                    }
+                }
+            }
+            return _employees;
         }
 
         // GET: api/Employee
@@ -32,7 +65,8 @@ namespace siemens_pedigree_api.Controllers
         {
             Console.WriteLine("en el sitio");
             IEnumerable<Employee> employees = _context.employees;
-            return employees;
+            
+            return GetEmployees();
         }
 
         // GET: api/Employee/5
