@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  siemens-pedigree-api:
+    image: ${DOCKER_REGISTRY-}siemenspedigreeapi
+    build:
+      context: .
+      dockerfile: siemens-pedigree-api/Dockerfile
