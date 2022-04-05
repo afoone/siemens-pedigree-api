@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using siemens_pedigree_api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +28,7 @@ namespace siemens_pedigree_api.Controllers
             builder.UserID = "sa";
             builder.Password = "iProcuratio2010!";
             builder.InitialCatalog = "master";
+   
             _conn = builder;
 
         }
@@ -70,10 +67,10 @@ namespace siemens_pedigree_api.Controllers
         }
 
         // GET: api/Employee/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}", Name = "GetEmployee")]
         public async Task<ActionResult<Employee>> Get(long id)
         {
-            Employee employee = await _context.employees.FindAsync(id);
+            Employee? employee = await _context.employees.FindAsync(id);
             if (employee == null)
             {
                 return NotFound();
