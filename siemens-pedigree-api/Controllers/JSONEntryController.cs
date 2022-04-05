@@ -16,13 +16,13 @@ namespace siemens_pedigree_api.Controllers
     public class JSONEntryController : ControllerBase
     {
 
-        private readonly JSONEntryContext _context;
+        //private readonly JSONEntryContext _context;
         private readonly SqlConnectionStringBuilder _builder;
 
 
         public JSONEntryController(JSONEntryContext context)
         {
-            _context = context;
+            //_context = context;
 
             SqlConnectionStringBuilder builder = new()
             {
@@ -55,18 +55,19 @@ namespace siemens_pedigree_api.Controllers
             {
                 String sql = "SELECT ID, Fecha_Ent, ID_Tree, Json_Text FROM GENETICA.dbo.GE_JSON_ENTRY";
 
-                using (SqlCommand command = new(sql, connection))
+                using SqlCommand command = new(sql, connection);
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    connection.Open();
-                    using(SqlDataReader reader = command.ExecuteReader())
+                    if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
                             _jsonEntries.Add(GetEntryFromReader(reader));
                         }
                     }
-                    connection.Close();
                 }
+                connection.Close();
 
             }
 
@@ -86,9 +87,12 @@ namespace siemens_pedigree_api.Controllers
                 connection.Open();
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        _jsonEntry = GetEntryFromReader(reader);
+                        while (reader.Read())
+                        {
+                            _jsonEntry = GetEntryFromReader(reader);
+                        }
                     }
                 }
                 connection.Close();
