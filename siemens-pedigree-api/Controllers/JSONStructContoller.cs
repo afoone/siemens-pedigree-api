@@ -119,7 +119,7 @@ namespace siemens_pedigree_api.Controllers
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
                 string sql = "INSERT INTO GENETICA.dbo.GE_JSON_STRUCT(Fecha_Str, ID_Tree, Json_Struct) " +
-                    $"VALUES('', '${json.IdTree}', '${json.Content}'); ";
+                    $"VALUES('', '{json.IdTree}', '{json.Content}'); ";
                 using SqlCommand command = new(sql, connection);
                 connection.Open();
                 command.ExecuteNonQuery();

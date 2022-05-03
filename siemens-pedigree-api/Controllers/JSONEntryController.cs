@@ -107,14 +107,18 @@ namespace siemens_pedigree_api.Controllers
             return _jsonEntry;
         }
 
-        // POST: api/JSONEntry
+        // POST: api/json
         [HttpPost]
         public async Task<IActionResult> CreateJSON(JSONEntry json)
         {
+            Console.WriteLine("adding json to json entry");
+
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
+                string JsonContent = json.Content;
+                Console.WriteLine(JsonContent);
                 string sql = "INSERT INTO GENETICA.dbo.GE_JSON_ENTRY(Fecha_Ent, ID_Tree, Json_Text) " +
-                    $"VALUES('', '${json.IdTree}', '${json.Content}'); ";
+                    $"VALUES('', '{json.IdTree}', '{json.Content.ToString()}'); ";
                 using SqlCommand command = new(sql, connection);
                 connection.Open();
                 command.ExecuteNonQuery();
