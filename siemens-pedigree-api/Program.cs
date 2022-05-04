@@ -36,6 +36,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// activate CORS
+app.UseCors();
+
 
 
 app.UseHttpsRedirection();
