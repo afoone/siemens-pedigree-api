@@ -167,14 +167,14 @@ public async Task<IActionResult> UploadImageProfile([FromForm]TreeImageViewModel
             // Upload the file if less than 2 MB
             if (memoryStream.Length < 2097152)
             {
-                //create a AppFile mdoel and save the image into database.
-                var file = new TreeImage()
-                {
-                    //Name = fileviewmodel.image.FileName,
-                    // debería pedir que pusisesen el nombre del archivo?=?
-                    Id = fileviewmodel.Id,
-                    Content = memoryStream.ToArray()
-                };
+                        //create a AppFile mdoel and save the image into database.
+                        var file = new TreeImage()
+                        {
+                            //Name = fileviewmodel.image.FileName,
+                            // debería pedir que pusisesen el nombre del archivo?=?
+                            Id = fileviewmodel.Id,
+                            Image = memoryStream.ToArray().ToString()
+                        };
 
                 //INSERT [Thumbnail] ( Data )
                 //SELECT * FROM OPENROWSET (BULK 'C:\Test\TestPic1.jpg', SINGLE_BLOB) AS X

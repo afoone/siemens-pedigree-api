@@ -22,7 +22,6 @@ namespace siemens_pedigree_api.Controllers
 
         public JSONEntryController(JSONEntryContext context)
         {
-            //_context = context;
 
             SqlConnectionStringBuilder builder = new()
             {
@@ -36,13 +35,38 @@ namespace siemens_pedigree_api.Controllers
 
         }
 
-        private JSONEntry GetEntryFromReader(SqlDataReader reader)
+        private static JSONEntry GetEntryFromReader(SqlDataReader reader)
         {
             Int32 ID = reader.GetInt32(0);
             DateTime date = reader.GetDateTime(1);
             String IdTree = reader.GetString(2);
             String JsonText = reader.GetString(3);
             return new JSONEntry(ID, date, IdTree, JsonText);
+        }
+
+        private static TreeImage GetTreeImageFromReader(SqlDataReader reader)
+        {
+            Int32 ID = reader.GetInt32(0);
+            DateTime date = reader.GetDateTime(1);
+            String IdTree = reader.GetString(2);
+            Stream imageStream = reader.GetStream(3);
+            String Image = "";
+            if (imageStream != null)
+            {
+                //Image = ImageStream.Read()
+                //Convert.FromBase64CharArray();
+                Byte[] inArray = new Byte[(int)imageStream.Length];
+                Char[] outArray = new Char[(int)(imageStream.Length * 1.34)];
+                imageStream.Read(inArray, 0, (int)imageStream.Length);
+                Convert.ToBase64CharArray(inArray, 0, inArray.Length, outArray, 0);
+                Image = Convert.ToBase64String(inArray);
+                //Image = Convert.ToString((int)imageStream.Length) ?? "";
+                //Image = Convert.ToBase64CharArray(inArray, 0, (int)imageStream.Length);
+                //Image = inArray.ToString() ?? "";
+                //Image = new(outArray);
+
+            }
+            return new TreeImage(ID, date, IdTree, Image);
         }
 
         [HttpGet]
@@ -78,12 +102,17 @@ namespace siemens_pedigree_api.Controllers
         public async Task<ActionResult<JSONEntry>> GetJSON(int id)
         {
             JSONEntry? _jsonEntry = null;
+            TreeImage? _imageEntry = null;
 
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
-                String sql = $"SELECT ID, Fecha_Ent, ID_Tree, Json_Text FROM GENETICA.dbo.GE_JSON_ENTRY WHERE ID={id}";
+                String sql = @"
+                    SELECT ID, Fecha_Ent, ID_Tree, Json_Text
+                    FROM GENETICA.dbo.GE_JSON_ENTRY
+                    WHERE ID=@id";
 
                 using SqlCommand command = new(sql, connection);
+                command.Parameters.AddWithValue("@id", id);
                 connection.Open();
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
@@ -95,13 +124,33 @@ namespace siemens_pedigree_api.Controllers
                         }
                     }
                 }
+
+                if (_jsonEntry == null)
+                {
+                    return NotFound();
+                }
+
+                String sql_tree =
+                    @"SELECT ID, Fecha_Str, ID_Tree, TREE_IMAGEN
+                    FROM GENETICA.dbo.GE_TREE_IMAGEN
+                    WHERE ID_Tree = @idtree
+                    "
+                ;
+
+                using SqlCommand imagecommand = new(sql_tree, connection);
+                imagecommand.Parameters.AddWithValue("@idtree", _jsonEntry.IdTree);
+                using (SqlDataReader _imageReader = imagecommand.ExecuteReader())
+                {
+                    if (_imageReader.HasRows)
+                    {
+                        while(_imageReader.Read())
+                        {
+                            _imageEntry = GetTreeImageFromReader(_imageReader);
+                            _jsonEntry.Image = _imageEntry.Image;
+                        }
+                    }
+                }
                 connection.Close();
-
-            }
-
-            if (_jsonEntry == null)
-            {
-                return NotFound();
             }
 
             return _jsonEntry;
@@ -115,8 +164,6 @@ namespace siemens_pedigree_api.Controllers
 
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
-                string JsonContent = json.Content;
-                Console.WriteLine(JsonContent);
                 string JsonSQL =
                     @$"INSERT INTO GENETICA.dbo.GE_JSON_ENTRY(Fecha_Ent, ID_Tree, Json_Text)
                     OUTPUT INSERTED.ID
@@ -124,7 +171,7 @@ namespace siemens_pedigree_api.Controllers
                 string ImageSQL =
                     @$"INSERT INTO GENETICA.dbo.GE_TREE_IMAGEN(ID_Tree, TREE_IMAGEN)
                     OUTPUT INSERTED.ID
-                    VALUES(@idtree, '{json.Image}')
+                    VALUES(@idtree, @jsonImage)
                     ; ";
 
                 connection.Open();
@@ -132,14 +179,14 @@ namespace siemens_pedigree_api.Controllers
                 command.Parameters.AddWithValue("@idtree", json.IdTree);
                 command.Parameters.AddWithValue("@jsonContent", json.Content.ToString());
 
-
                 int insertedJson = (int)command.ExecuteScalar();
                 using SqlCommand commandImage = new(ImageSQL, connection);
                 commandImage.Parameters.AddWithValue("@idtree",json.IdTree);
-
+                byte[] binaryImage = Convert.FromBase64String(json.Image??"");
+                commandImage.Parameters.AddWithValue("@jsonImage", binaryImage);
+                commandImage.ExecuteNonQuery();
 
                 json.Id = insertedJson;
-
 
                 connection.Close();
                 return Ok(json);
