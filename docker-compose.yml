@@ -2,7 +2,17 @@ version: '3.4'
 
 services:
   siemens-pedigree-api:
-    image: ${DOCKER_REGISTRY-}siemenspedigreeapi
+    image: afoone/siemens-pedigree-api
+    container_name: pedigree-api
     build:
       context: .
       dockerfile: siemens-pedigree-api/Dockerfile
+    networks:
+      - pedigree
+    ports:
+      - 9443:443
+      - 9080:80
+
+networks:
+  pedigree:
+    name: pedigree

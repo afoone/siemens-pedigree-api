@@ -81,7 +81,7 @@ namespace siemens_pedigree_api.Controllers
 
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
-                    String sql = $"SELECT ID, Fecha_Ent, ID_Tree, Json_Text FROM GENETICA.dbo.GE_JSON_ENTRY WHERE ID={id}";
+                String sql = $"SELECT ID, Fecha_Ent, ID_Tree, Json_Text FROM GENETICA.dbo.GE_JSON_ENTRY WHERE ID={id}";
 
                 using SqlCommand command = new(sql, connection);
                 connection.Open();
@@ -107,21 +107,43 @@ namespace siemens_pedigree_api.Controllers
             return _jsonEntry;
         }
 
-        // POST: api/JSONEntry
+        // POST: api/json
         [HttpPost]
         public async Task<IActionResult> CreateJSON(JSONEntry json)
         {
+            Console.WriteLine("adding json to json entry");
+
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
-                string sql = "INSERT INTO GENETICA.dbo.GE_JSON_ENTRY(Fecha_Ent, ID_Tree, Json_Text) " +
-                    $"VALUES('', '${json.IdTree}', '${json.Content}'); ";
-                using SqlCommand command = new(sql, connection);
-                connection.Open();
-                command.ExecuteNonQuery();
-                connection.Close();
-            }
+                string JsonContent = json.Content;
+                Console.WriteLine(JsonContent);
+                string JsonSQL =
+                    @$"INSERT INTO GENETICA.dbo.GE_JSON_ENTRY(Fecha_Ent, ID_Tree, Json_Text)
+                    OUTPUT INSERTED.ID
+                    VALUES('', @idtree, @jsonContent); ";
+                string ImageSQL =
+                    @$"INSERT INTO GENETICA.dbo.GE_TREE_IMAGEN(ID_Tree, TREE_IMAGEN)
+                    OUTPUT INSERTED.ID
+                    VALUES(@idtree, '{json.Image}')
+                    ; ";
 
-            return NoContent();
+                connection.Open();
+                using SqlCommand command = new(JsonSQL, connection);
+                command.Parameters.AddWithValue("@idtree", json.IdTree);
+                command.Parameters.AddWithValue("@jsonContent", json.Content.ToString());
+
+
+                int insertedJson = (int)command.ExecuteScalar();
+                using SqlCommand commandImage = new(ImageSQL, connection);
+                commandImage.Parameters.AddWithValue("@idtree",json.IdTree);
+
+
+                json.Id = insertedJson;
+
+
+                connection.Close();
+                return Ok(json);
+            }
 
         }
 
