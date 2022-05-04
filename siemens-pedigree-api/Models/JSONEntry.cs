@@ -7,6 +7,7 @@ namespace siemens_pedigree_api.Models
 		public String Content { get; set; }
 		public DateTime? Date { get; set; }
 		public String IdTree { get; set; }
+		public String? Image { get; set; }
 		
 		public JSONEntry()
 		{
