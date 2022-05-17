@@ -7,6 +7,7 @@
     <RootNamespace>siemens_pedigree_api</RootNamespace>
     <DockerComposeProjectPath>../docker-compose.dcproj</DockerComposeProjectPath>
     <UserSecretsId>c01b8914-6b42-4225-94b7-376a8c0e724d</UserSecretsId>
+    <ReleaseVersion>0.1.1</ReleaseVersion>
   </PropertyGroup>
 
   <ItemGroup>
