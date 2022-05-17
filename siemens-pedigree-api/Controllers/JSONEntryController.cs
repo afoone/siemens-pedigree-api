@@ -60,10 +60,6 @@ namespace siemens_pedigree_api.Controllers
                 imageStream.Read(inArray, 0, (int)imageStream.Length);
                 Convert.ToBase64CharArray(inArray, 0, inArray.Length, outArray, 0);
                 Image = Convert.ToBase64String(inArray);
-                //Image = Convert.ToString((int)imageStream.Length) ?? "";
-                //Image = Convert.ToBase64CharArray(inArray, 0, (int)imageStream.Length);
-                //Image = inArray.ToString() ?? "";
-                //Image = new(outArray);
 
             }
             return new TreeImage(ID, date, IdTree, Image);
@@ -160,8 +156,6 @@ namespace siemens_pedigree_api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateJSON(JSONEntry json)
         {
-            Console.WriteLine("adding json to json entry");
-
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
                 string JsonSQL =
@@ -191,25 +185,43 @@ namespace siemens_pedigree_api.Controllers
                 connection.Close();
                 return Ok(json);
             }
-
         }
 
-        // PUT: api/JSONEntry/5
+        // PUT: api/json/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateJSON(int id, JSONEntry json)
         {
 
             using (SqlConnection connection = new(_builder.ConnectionString))
             {
-                string sql = "UPDATE GENETICA.dbo.GE_JSON_ENTRY" +
-                    $" SET ID_Tree = '{json.IdTree}', Json_Text = '{json.Content}' WHERE ID = {id}";
-                using SqlCommand command = new(sql, connection);
+                string JsonSQL =
+                    @"UPDATE GENETICA.dbo.GE_JSON_ENTRY
+                    SET ID_Tree = @idtree, Json_Text=@jsonContent
+                    WHERE ID = @id
+                    ;";
+                string ImageSQL =
+                    @"UPDATE GENETICA.dbo.GE_TREE_IMAGEN
+                    SET ID_TREE = @idtree, TREE_IMAGEN = @jsonImage
+                    WHERE ID = @id
+                    ; ";
                 connection.Open();
+                using SqlCommand command = new(JsonSQL, connection);
+                command.Parameters.AddWithValue("@idtree", json.IdTree);
+                command.Parameters.AddWithValue("@jsonContent", json.Content.ToString());
+                command.Parameters.AddWithValue("@id", id);
                 command.ExecuteNonQuery();
+
+                using SqlCommand commandImage = new(ImageSQL, connection);
+                commandImage.Parameters.AddWithValue("@idtree", json.IdTree);
+                byte[] binaryImage = Convert.FromBase64String(json.Image ?? "");
+                commandImage.Parameters.AddWithValue("@jsonImage", binaryImage);
+                commandImage.Parameters.AddWithValue("@id", id);
+                commandImage.ExecuteNonQuery();
+
                 connection.Close();
+                return Ok(json);
             }
 
-            return NoContent();
 
         }
 
